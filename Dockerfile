@@ -7,9 +7,15 @@ ENV HTTPD_VERSION=2.4.43
 ENV PHP_VERSION=7.3.17
 ENV PECL_EXTENSIONS="redis xdebug"
 
-COPY ./httpd-$HTTPD_VERSION.tar.bz2 /tmp/
-COPY ./php-$PHP_VERSION.tar.bz2 /tmp/
-COPY ./cfg/php.ini /usr/local/lib
+# COPY ./src/httpd-$HTTPD_VERSION.tar.bz2 /tmp/
+# COPY ./src/php-$PHP_VERSION.tar.bz2 /tmp/
+
+RUN wget --directory-prefix=/tmp/ \
+    http://mirror.netinch.com/pub/apache//httpd/httpd-$HTTPD_VERSION.tar.bz2 \
+    && \
+    wget --directory-prefix=/tmp/ \
+    https://www.php.net/distributions/php-$PHP_VERSION.tar.bz2
+
 
 RUN apk update && apk add \
                 apr-dev \
@@ -35,18 +41,20 @@ RUN apk update && apk add \
     ; \
     cd /tmp/php-$PHP_VERSION/ \
     ; \
-    ./configure --with-apxs2=/usr/local/apache2/bin/apxs && make && make install \
-    ; \
-    cd /tmp/php-$PHP_VERSION/ext/openssl/ \
+    ./configure --with-apxs2=/usr/local/apache2/bin/apxs && make && make install
+
+COPY ./cfg/php.ini /usr/local/lib
+
+RUN cd /tmp/php-$PHP_VERSION/ext/openssl/ \
     ; \
     cp config0.m4 config.m4 && \
     phpize && ./configure && make && make install \
     ; \
     for EXTENSION in $PECL_EXTENSIONS; do yes '' | pecl install $EXTENSION; done \
     ; \
-    apk del autoconf extra-cmake-modules cmake abuild gcc build-base
+    apk del autoconf extra-cmake-modules cmake abuild gcc build-base; \
+    rm -rf /tmp/*
 
-RUN rm -rf /tmp/*
 COPY ./cfg/httpd.conf /usr/local/apache2/conf/httpd.conf
 COPY ./cfg/php.conf /usr/local/apache2/conf.d/php.conf
 # COPY ./www/* /usr/local/apache2/htdocs/
