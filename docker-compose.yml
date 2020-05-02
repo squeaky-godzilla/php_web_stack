@@ -1,0 +1,10 @@
+version: "3"
+services:
+
+  httpd_php:
+    build: .
+    ports:
+      - "80:80"
+    volumes:
+      - ./logs/:/usr/local/apache2/logs
+      - ./host_www/:/usr/local/apache2/htdocs/host_www/
