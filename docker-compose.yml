@@ -7,4 +7,4 @@ services:
       - "80:80"
     volumes:
       - ./logs/:/usr/local/apache2/logs
-      - ./host_www/:/usr/local/apache2/htdocs/host_www/
+      - ./www/:/usr/local/apache2/htdocs/www/
