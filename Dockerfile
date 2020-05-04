@@ -6,33 +6,45 @@ FROM alpine:3.11
 ENV HTTPD_VERSION=2.4.43
 ENV PHP_VERSION=7.3.17
 
-# COPY ./src/httpd-$HTTPD_VERSION.tar.bz2 /tmp/
-# COPY ./src/php-$PHP_VERSION.tar.bz2 /tmp/
+ENV HTTPD_BUILD_DEPS="autoconf extra-cmake-modules cmake abuild gcc build-base bash pcre-dev"
+ENV HTTPD_RUN_DEPS="apr-dev apr-util-dev"
+
+ENV PHP_BUILD_DEPS="autoconf extra-cmake-modules cmake abuild gcc build-base bash"
+ENV PHP_RUN_DEPS="pcre-dev libxml2-dev"
 
 RUN wget --directory-prefix=/tmp/ \
-
-    http://mirror.netinch.com/pub/apache//httpd/httpd-$HTTPD_VERSION.tar.bz2; \
-    wget --directory-prefix=/tmp/ \
+    http://mirror.netinch.com/pub/apache//httpd/httpd-$HTTPD_VERSION.tar.bz2
+RUN wget --directory-prefix=/tmp/ \
     https://www.php.net/distributions/php-$PHP_VERSION.tar.bz2
 
-RUN apk add --no-cache \
-                apr-dev \
-                apr-util-dev \
-                pcre-dev \
-                build-base \
-                gcc \
-                abuild \
-                cmake \
-                extra-cmake-modules \
-                libxml2-dev \
-                autoconf \
+WORKDIR /tmp/httpd_build_files/
+WORKDIR /tmp/php_build_files/
+
+# RUN apk add --no-cache \
+#                 apr-dev \
+#                 apr-util-dev \
+#                 pcre-dev \
+#                 build-base \
+#                 gcc \
+#                 abuild \
+#                 cmake \
+#                 extra-cmake-modules \
+#                 libxml2-dev \
+#                 autoconf \
+#     ; \
+
+# build httpd
+
+RUN apk add --no-cache ${HTTPD_BUILD_DEPS} ${HTTPD_RUN_DEPS}; \
+    tar -xf /tmp/httpd-${HTTPD_VERSION}.tar.bz2 -C /tmp/ \
     ; \
-    tar -xf /tmp/httpd-$HTTPD_VERSION.tar.bz2 -C /tmp/ \
+    cd /tmp/httpd-${HTTPD_VERSION}/ || exit \
     ; \
-    cd /tmp/httpd-$HTTPD_VERSION/ || exit \
-    ; \
-    ./configure --enable-so; make; make install \
-    ; \
+    ./configure --enable-so; make; make install;
+
+# build php
+
+RUN apk add --no-cache ${PHP_BUILD_DEPS} ${PHP_RUN_DEPS}; \
     cd /tmp/ || exit \
     ; \
     tar -xf /tmp/php-$PHP_VERSION.tar.bz2 -C /tmp/ \
@@ -54,7 +66,7 @@ RUN cd /tmp/php-$PHP_VERSION/ext/openssl/ || exit \
     ; \
     for EXTENSION in $PECL_EXTENSIONS; do yes '' | pecl install $EXTENSION; done \
     ; \
-    apk del autoconf extra-cmake-modules cmake abuild gcc build-base bash; \
+    apk del ${HTTPD_BUILD_DEPS} ${PHP_BUILD_DEPS}; \
     rm -rf /tmp/*
 
 COPY ./cfg/httpd.conf /usr/local/apache2/conf/httpd.conf
