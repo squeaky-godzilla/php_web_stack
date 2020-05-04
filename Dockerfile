@@ -10,10 +10,10 @@ ENV PHP_VERSION=7.3.17
 # COPY ./src/php-$PHP_VERSION.tar.bz2 /tmp/
 
 RUN wget --directory-prefix=/tmp/ \
+
     http://mirror.netinch.com/pub/apache//httpd/httpd-$HTTPD_VERSION.tar.bz2; \
     wget --directory-prefix=/tmp/ \
     https://www.php.net/distributions/php-$PHP_VERSION.tar.bz2
-
 
 RUN apk add --no-cache \
                 apr-dev \
