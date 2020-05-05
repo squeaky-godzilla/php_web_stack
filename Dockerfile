@@ -7,10 +7,9 @@ ENV HTTPD_VERSION=2.4.43
 ENV PHP_VERSION=7.3.17
 
 ENV HTTPD_BUILD_DEPS="autoconf extra-cmake-modules cmake abuild gcc build-base bash pcre-dev apr-dev apr-util-dev"
-# ENV HTTPD_RUN_DEPS="apr-dev apr-util-dev"
 
 ENV PHP_BUILD_DEPS="autoconf extra-cmake-modules cmake abuild gcc build-base bash pcre-dev libxml2-dev"
-# ENV PHP_RUN_DEPS="pcre-dev libxml2-dev"
+
 
 RUN wget --directory-prefix=/tmp/ \
     http://mirror.netinch.com/pub/apache//httpd/httpd-$HTTPD_VERSION.tar.bz2
@@ -40,32 +39,21 @@ RUN apk add --no-cache ${PHP_BUILD_DEPS}; \
     ; \
     ./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-openssl; make; make install > /tmp/php_install_commands.txt
 
-
-# COPY ./cfg/php.ini /usr/local/lib
-
 # build openssl & instal other php extensions via pecl
 
 ENV PECL_EXTENSIONS="redis xdebug"
 
-# RUN cd /tmp/php-${PHP_VERSION}/ext/openssl/ || exit \
-#     ; \
-#     cp config0.m4 config.m4 || exit; \
-#     phpize; ./configure; make; make install \
-#     ; \
 RUN for EXTENSION in ${PECL_EXTENSIONS}; do yes '' | pecl install $EXTENSION; done;
 RUN apk del ${HTTPD_BUILD_DEPS} ${PHP_BUILD_DEPS}
-    # rm -rf /tmp/*
+
+# copy the binaries to a fresh image with run deps
 
 FROM alpine:3.11
 
 ENV HTTPD_RUN_DEPS="apr apr-util"
 ENV PHP_RUN_DEPS="pcre libxml2"
 
-RUN apk add --no-cache ${HTTPD_RUN_DEPS}
-RUN apk add --no-cache ${PHP_RUN_DEPS}
-
-# RUN apk add apr apr-util pcre libxml2
-
+RUN apk add --no-cache ${HTTPD_RUN_DEPS} ${PHP_RUN_DEPS}
 
 COPY --from=0 /usr/local/apache2/ /usr/local/apache2/
 COPY --from=0 /usr/local/lib/php/ /usr/local/lib/php/
