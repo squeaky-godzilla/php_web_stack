@@ -10,6 +10,7 @@ ENV HTTPD_BUILD_DEPS="autoconf extra-cmake-modules cmake abuild gcc build-base b
 
 ENV PHP_BUILD_DEPS="autoconf extra-cmake-modules cmake abuild gcc build-base bash pcre-dev libxml2-dev"
 
+
 RUN wget --directory-prefix=/tmp/ \
     http://mirror.netinch.com/pub/apache//httpd/httpd-$HTTPD_VERSION.tar.bz2
 RUN wget --directory-prefix=/tmp/ \
@@ -37,7 +38,6 @@ RUN apk add --no-cache ${PHP_BUILD_DEPS}; \
     cd /tmp/php-${PHP_VERSION}/ || exit \
     ; \
     ./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-openssl; make; make install > /tmp/php_install_commands.txt
-
 
 # build openssl & instal other php extensions via pecl
 
