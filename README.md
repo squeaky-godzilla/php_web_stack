@@ -15,3 +15,6 @@ configs & content & log access is handled via mounted volumes.
 tmp folder contains make install logging that's been used for indentifing the file locations for multistage build
 
 docker build should yield an image ~240MB, which should be tolerable (best single step result was around 1GB :goberserk:)
+
+TODO:
+* checksums for security
