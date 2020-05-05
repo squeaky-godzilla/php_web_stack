@@ -2,22 +2,21 @@ FROM alpine:3.11
 
 # compile httpd and php, add redis, xdebug, 
 # compose to access php & apache logs via volumes
+# TODO:
+# - checksums
 
-ENV HTTPD_VERSION=2.4.43
-ENV PHP_VERSION=7.3.17
+ARG HTTPD_VERSION=2.4.43
+ARG PHP_VERSION=7.3.17
 
-ENV HTTPD_BUILD_DEPS="autoconf extra-cmake-modules cmake abuild gcc build-base bash pcre-dev apr-dev apr-util-dev"
 
-ENV PHP_BUILD_DEPS="autoconf extra-cmake-modules cmake abuild gcc build-base bash pcre-dev libxml2-dev"
+ARG HTTPD_BUILD_DEPS="autoconf extra-cmake-modules cmake abuild gcc build-base bash pcre-dev apr-dev apr-util-dev"
 
+ARG PHP_BUILD_DEPS="autoconf extra-cmake-modules cmake abuild gcc build-base bash pcre-dev libxml2-dev"
 
 RUN wget --directory-prefix=/tmp/ \
     http://mirror.netinch.com/pub/apache//httpd/httpd-$HTTPD_VERSION.tar.bz2
 RUN wget --directory-prefix=/tmp/ \
     https://www.php.net/distributions/php-$PHP_VERSION.tar.bz2
-
-WORKDIR /tmp/httpd_build_files/
-WORKDIR /tmp/php_build_files/
 
 # build httpd
 
@@ -41,17 +40,22 @@ RUN apk add --no-cache ${PHP_BUILD_DEPS}; \
 
 # build openssl & instal other php extensions via pecl
 
-ENV PECL_EXTENSIONS="redis xdebug"
+ARG PECL_EXTENSIONS="redis xdebug"
 
 RUN for EXTENSION in ${PECL_EXTENSIONS}; do yes '' | pecl install $EXTENSION; done;
+
+#leaving the /tmp in to see the reasoning behind the source for 2nd stage image
+#RUN apk del ${HTTPD_BUILD_DEPS} ${PHP_BUILD_DEPS}; rm -rf /tmp/*
 RUN apk del ${HTTPD_BUILD_DEPS} ${PHP_BUILD_DEPS}
+
 
 # copy the binaries to a fresh image with run deps
 
 FROM alpine:3.11
 
-ENV HTTPD_RUN_DEPS="apr apr-util"
-ENV PHP_RUN_DEPS="pcre libxml2"
+
+ARG HTTPD_RUN_DEPS="apr apr-util"
+ARG PHP_RUN_DEPS="pcre libxml2"
 
 RUN apk add --no-cache ${HTTPD_RUN_DEPS} ${PHP_RUN_DEPS}
 
