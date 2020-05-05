@@ -8,3 +8,6 @@ services:
     volumes:
       - ./logs/:/usr/local/apache2/logs
       - ./www/:/usr/local/apache2/htdocs/www/
+      - ./cfg/httpd.conf:/usr/local/apache2/conf/httpd.conf
+      - ./cfg/php.conf:/usr/local/apache2/conf.d/php.conf
+      - ./cfg/php.ini:/usr/local/lib/php.ini
