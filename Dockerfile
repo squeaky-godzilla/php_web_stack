@@ -8,6 +8,7 @@ FROM alpine:3.11
 ARG HTTPD_VERSION=2.4.43
 ARG PHP_VERSION=7.3.17
 
+
 ARG HTTPD_BUILD_DEPS="autoconf extra-cmake-modules cmake abuild gcc build-base bash pcre-dev apr-dev apr-util-dev"
 
 ARG PHP_BUILD_DEPS="autoconf extra-cmake-modules cmake abuild gcc build-base bash pcre-dev libxml2-dev"
@@ -37,17 +38,21 @@ RUN apk add --no-cache ${PHP_BUILD_DEPS}; \
     ; \
     ./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-openssl; make; make install > /tmp/php_install_commands.txt
 
-
 # build openssl & instal other php extensions via pecl
 
 ARG PECL_EXTENSIONS="redis xdebug"
 
 RUN for EXTENSION in ${PECL_EXTENSIONS}; do yes '' | pecl install $EXTENSION; done;
-RUN apk del ${HTTPD_BUILD_DEPS} ${PHP_BUILD_DEPS}; rm -rf /tmp/*
+
+#leaving the /tmp in to see the reasoning behind the source for 2nd stage image
+#RUN apk del ${HTTPD_BUILD_DEPS} ${PHP_BUILD_DEPS}; rm -rf /tmp/*
+RUN apk del ${HTTPD_BUILD_DEPS} ${PHP_BUILD_DEPS}
+
 
 # copy the binaries to a fresh image with run deps
 
 FROM alpine:3.11
+
 
 ARG HTTPD_RUN_DEPS="apr apr-util"
 ARG PHP_RUN_DEPS="pcre libxml2"
